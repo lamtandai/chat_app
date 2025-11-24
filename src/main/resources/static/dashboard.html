@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Security App</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            margin: 0;
+            color: #333;
+        }
+
+        .logout-btn {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            text-decoration: none;
+            font-weight: 500;
+            transition: background-color 0.3s;
+        }
+
+        .logout-btn:hover {
+            background-color: #c82333;
+        }
+
+        .user-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .user-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 4px solid #e1e5e9;
+        }
+
+        .user-info h2 {
+            margin: 0 0 0.5rem 0;
+            color: #333;
+        }
+
+        .user-info p {
+            margin: 0;
+            color: #666;
+        }
+
+        .provider-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin-top: 0.5rem;
+        }
+
+        .provider-google {
+            background-color: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .provider-facebook {
+            background-color: #e8f4fd;
+            color: #1877f2;
+        }
+
+        .provider-github {
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        .attributes-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .attributes-section h3 {
+            margin-top: 0;
+            color: #333;
+        }
+
+        .attribute-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .attribute-item:last-child {
+            border-bottom: none;
+        }
+
+        .attribute-key {
+            font-weight: 500;
+            color: #555;
+        }
+
+        .attribute-value {
+            color: #777;
+            max-width: 60%;
+            word-break: break-all;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: white;
+        }
+
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Dashboard</h1>
+            <form action="/logout" method="post" style="margin: 0;">
+                <button type="submit" class="logout-btn">Logout</button>
+            </form>
+        </div>
+
+        <div id="loading" class="loading">
+            Loading user information...
+        </div>
+
+        <div id="error" class="error" style="display: none;">
+            Failed to load user information. Please try refreshing the page.
+        </div>
+
+        <div id="user-content" style="display: none;">
+            <div class="user-card">
+                <div class="user-profile">
+                    <img id="user-avatar" class="user-avatar" src="" alt="User Avatar">
+                    <div class="user-info">
+                        <h2 id="user-name">Loading...</h2>
+                        <p id="user-email">Loading...</p>
+                        <span id="provider-badge" class="provider-badge">Loading...</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="attributes-section">
+                <h3>User Attributes</h3>
+                <div id="user-attributes">
+                    <!-- Attributes will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Load user information when page loads
+        document.addEventListener('DOMContentLoaded', function () {
+            fetch('/user-info')
+                .then(response => response.json())
+                .then(data => {
+                    const loading = document.getElementById('loading');
+                    const error = document.getElementById('error');
+                    const content = document.getElementById('user-content');
+
+                    loading.style.display = 'none';
+
+                    if (!data.authenticated) {
+                        window.location.href = '/login';
+                        return;
+                    }
+
+                    // Update user profile
+                    document.getElementById('user-name').textContent = data.name || 'Unknown User';
+                    document.getElementById('user-email').textContent = data.email || 'No email provided';
+
+                    const avatar = document.getElementById('user-avatar');
+                    if (data.picture) {
+                        avatar.src = data.picture;
+                        avatar.alt = data.name + ' Avatar';
+                    } else {
+                        avatar.src = 'https://via.placeholder.com/80x80/cccccc/ffffff?text=' +
+                            (data.name ? data.name.charAt(0).toUpperCase() : '?');
+                    }
+
+                    // Update provider badge
+                    const providerBadge = document.getElementById('provider-badge');
+                    providerBadge.textContent = 'Signed in with ' + data.provider;
+                    providerBadge.className = 'provider-badge provider-' + data.provider.toLowerCase();
+
+                    // Display attributes
+                    const attributesContainer = document.getElementById('user-attributes');
+                    attributesContainer.innerHTML = '';
+
+                    if (data.attributes) {
+                        Object.entries(data.attributes).forEach(([key, value]) => {
+                            const item = document.createElement('div');
+                            item.className = 'attribute-item';
+                            item.innerHTML = `
+                                <span class="attribute-key">${key}</span>
+                                <span class="attribute-value">${JSON.stringify(value)}</span>
+                            `;
+                            attributesContainer.appendChild(item);
+                        });
+                    }
+
+                    content.style.display = 'block';
+                })
+                .catch(err => {
+                    console.error('Failed to load user info:', err);
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('error').style.display = 'block';
+                });
+        });
+    </script>
+</body>
+
+</html>
