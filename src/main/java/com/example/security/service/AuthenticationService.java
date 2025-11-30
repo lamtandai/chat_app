@@ -1,6 +1,8 @@
 package com.example.security.service;
 
 import java.util.UUID;
+import org.springframework.context.ApplicationEventPublisher;
+import com.example.security.event.UserRegistrationEvent;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -9,8 +11,8 @@ import org.springframework.stereotype.Service;
 import com.example.security.dto.AuthenticationRequest;
 import com.example.security.dto.AuthenticationResponse;
 import com.example.security.dto.RegisterRequest;
-import com.example.security.model.Role;
 import com.example.security.model.User;
+import com.example.security.model.Authority.Role;
 import com.example.security.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -22,9 +24,11 @@ public class AuthenticationService {
   private final PasswordEncoder passwordEncoder;
   private final JwtService jwtService;
   private final AuthenticationManager authenticationManager;
+  private final ApplicationEventPublisher eventPublisher;
 
   public AuthenticationResponse register(User user) {
     User savedUser = repository.save(user);
+    eventPublisher.publishEvent(new UserRegistrationEvent(this, savedUser));
     return buildAuthenticationResponse(savedUser);
   }
 
@@ -71,7 +75,9 @@ public class AuthenticationService {
         .picture(picture) // Profile picture URL from OAuth2 provider
         .build();
 
-    return repository.save(user);
+    User savedUser = repository.save(user);
+    eventPublisher.publishEvent(new UserRegistrationEvent(this, savedUser));
+    return savedUser;
   }
 
   public AuthenticationResponse registerAdmin(RegisterRequest request) {
@@ -100,6 +106,10 @@ public class AuthenticationService {
             request.getPassword()));
     User user = repository.findByEmail(request.getEmail())
         .orElseThrow();
+
+    // Trigger queue creation for existing users logging in
+    eventPublisher.publishEvent(new UserRegistrationEvent(this, user));
+
     return buildAuthenticationResponse(user);
   }
 
@@ -107,6 +117,9 @@ public class AuthenticationService {
    * Generate a fresh JWT for an existing user without touching persistence.
    */
   public AuthenticationResponse generateTokensForExistingUser(User user) {
+    // Trigger queue creation for OAuth2 users logging in
+    eventPublisher.publishEvent(new UserRegistrationEvent(this, user));
+
     return buildAuthenticationResponse(user);
   }
 

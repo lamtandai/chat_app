@@ -1,11 +1,9 @@
-package com.example.security.model;
+package com.example.security.model.Chatting;
 
 import java.io.Serializable;
 import java.time.Instant;
 
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -21,10 +19,12 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class Message implements Serializable {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long Id;
+    private Long messageId; // Local sequence-based ID
+    private Long channelId; // Identifies the conversation (1-on-1 or group)
+    private Long sequenceNumber; // Sequence within the channel
     private String content;
     private String sender;
+    private String receiver;
     private Instant createdAt;
 
 }

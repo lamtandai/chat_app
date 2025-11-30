@@ -1,4 +1,4 @@
-package com.example.security.model;
+package com.example.security.model.Authority;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;

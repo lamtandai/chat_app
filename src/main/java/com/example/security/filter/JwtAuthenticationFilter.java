@@ -13,6 +13,8 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.example.security.dto.UserPrincipal;
+import com.example.security.model.User;
 import com.example.security.service.JwtService;
 
 import jakarta.servlet.FilterChain;
@@ -40,18 +42,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     // Skip JWT validation for auth endpoints
     if (request.getServletPath().contains("/api/v1/auth") ||
         request.getServletPath().contains("/login") ||
-        request.getServletPath().contains("/oauth2") 
-      ) {
+        request.getServletPath().contains("/oauth2")) {
       filterChain.doFilter(request, response);
       return;
     }
-    
-    Cookie [] cookies = request.getCookies();
-    if (Objects.isNull(cookies)){
-        filterChain.doFilter(request, response);
-        return;
+
+    Cookie[] cookies = request.getCookies();
+    if (Objects.isNull(cookies)) {
+      filterChain.doFilter(request, response);
+      return;
     }
-    
+
     String jwt = null;
     String userEmail = null;
 
@@ -70,34 +71,47 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     try {
       userEmail = jwtService.extractUsername(jwt);
     } catch (Exception ex) {
-      if (ex instanceof io.jsonwebtoken.ExpiredJwtException) {
-        log.info("⏰ Access token expired: {}", ex.getMessage());
-      } else {
-        log.warn("⚠️ Failed to extract username from JWT: {}", ex.getMessage());
-      }
+
       filterChain.doFilter(request, response);
       return;
     }
-    
-    if (userEmail == null || SecurityContextHolder.getContext().getAuthentication() != null) {
+
+    if (userEmail == null) {
+      filterChain.doFilter(request, response);
+      return;
+    }
+
+    Authentication existingAuth = SecurityContextHolder.getContext().getAuthentication();
+    if (existingAuth != null && existingAuth instanceof UsernamePasswordAuthenticationToken) {
       filterChain.doFilter(request, response);
       return;
     }
 
     UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
-    
-    log.info("userDetails: {}", userDetails);
 
-    if (jwtService.isTokenValid(jwt, userDetails)) {
+    // Convert to UserPrincipal if it's a User entity
+    UserPrincipal userPrincipal;
+    if (userDetails instanceof UserPrincipal) {
+      userPrincipal = (UserPrincipal) userDetails;
+    } else if (userDetails instanceof User) {
+      userPrincipal = UserPrincipal.create((User) userDetails);
+    } else {
+      filterChain.doFilter(request, response);
+      return;
+    }
+
+    log.info("userPrincipal: {}", userPrincipal);
+
+    if (jwtService.isTokenValid(jwt, userPrincipal)) {
       UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-          userDetails,
+          userPrincipal,
           null,
-          userDetails.getAuthorities());
+          userPrincipal.getAuthorities());
       authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-      
+
       SecurityContextHolder.getContext().setAuthentication(authToken);
     }
-    
+
     filterChain.doFilter(request, response);
 
   }

@@ -1,12 +1,16 @@
 package com.example.security.service;
 
 import java.security.Principal;
+import java.util.List;
+
+import java.util.stream.Collectors;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.example.security.dto.ChangePasswordRequest;
+import com.example.security.dto.UserSearchResponse;
 import com.example.security.model.User;
 import com.example.security.repository.UserRepository;
 
@@ -37,5 +41,17 @@ public class UserService {
 
         // save the new password
         repository.save(user);
+    }
+
+    public List<UserSearchResponse> searchUsers(String query) {
+        return repository.findByNameContainingIgnoreCaseOrEmailContainingIgnoreCase(query, query)
+                .stream()
+                .map(user -> UserSearchResponse.builder()
+                        .id(user.getId())
+                        .username(user.getUsername())
+                        .name(user.getName())
+                        .picture(user.getPicture())
+                        .build())
+                .collect(Collectors.toList());
     }
 }

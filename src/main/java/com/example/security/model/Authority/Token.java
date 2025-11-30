@@ -1,5 +1,6 @@
-package com.example.security.model;
+package com.example.security.model.Authority;
 
+import com.example.security.model.User;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.Column;

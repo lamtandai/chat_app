@@ -4,7 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import com.example.security.model.Token;
+import com.example.security.model.Authority.Token;
 
 import java.util.List;
 import java.util.Optional;

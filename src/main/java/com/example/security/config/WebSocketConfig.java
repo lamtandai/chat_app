@@ -25,18 +25,18 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 	@Override
 	public void configureMessageBroker(MessageBrokerRegistry config) {
 		// config.enableSimpleBroker("/topic");
-		config.enableStompBrokerRelay("/topic")
+		config.enableStompBrokerRelay("/topic", "/queue")
 				.setRelayHost(relayHost)
 				.setRelayPort(relayPort)
 				.setClientLogin(relayLogin)
 				.setClientPasscode(relayPasscode);
-		config.setApplicationDestinationPrefixes("/app");                                                                              
-	}                                                 
+		config.setApplicationDestinationPrefixes("/app");
+	}
 
 	@Override
 	public void registerStompEndpoints(StompEndpointRegistry registry) {
 		registry.addEndpoint("/ws"); // IMPORTANT
-        
+
 	}
 
 }

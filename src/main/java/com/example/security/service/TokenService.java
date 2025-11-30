@@ -5,9 +5,9 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import com.example.security.dto.AuthenticationResponse;
-import com.example.security.model.Token;
-import com.example.security.model.TokenType;
 import com.example.security.model.User;
+import com.example.security.model.Authority.Token;
+import com.example.security.model.Authority.TokenType;
 import com.example.security.repository.TokenRepository;
 
 import lombok.RequiredArgsConstructor;

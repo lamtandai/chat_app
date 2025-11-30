@@ -29,13 +29,11 @@ public class AuthenticationController {
       @RequestBody RegisterRequest request,
       HttpServletResponse response) {
 
-    log.info("📝 Registration request for email: {}", request.getEmail());
     AuthenticationResponse authResponse = authenticationService.registerUser(request);
 
-    // Add JWT tokens to cookies
     addTokenCookie(response, authResponse.getAccessToken());
 
-    log.info("✅ User registered successfully, JWT tokens set in cookies");
+    
     return ResponseEntity.ok(authResponse);
   }
 

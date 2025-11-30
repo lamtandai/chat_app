@@ -6,7 +6,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 
 import com.example.security.model.Article;
 import com.example.security.model.Category;
-import com.example.security.rabbitmq.Producer;
+
 import com.example.security.repository.ArticleRepository;
 import com.example.security.repository.CategoryRepository;
 
@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 public class SecurityApplication {
 	static CategoryRepository categoryRepository;
 	static ArticleRepository articleRepository;
-	static Producer producer;
+	
 	public record TestMessage(Object category, Object article) {}
 
 	static Category createCategory(String name) {
@@ -31,7 +31,7 @@ public class SecurityApplication {
 		ConfigurableApplicationContext context = SpringApplication.run(SecurityApplication.class, args);
 		categoryRepository = context.getBean(CategoryRepository.class);
 		articleRepository = context.getBean(ArticleRepository.class);
-		producer = context.getBean(Producer.class);
+		
 
 		try {
 			Category entertainmentCategory = createCategory("Entertainment");
@@ -43,25 +43,25 @@ public class SecurityApplication {
 			articleRepository
 					.save(article);
 
-			var test = new TestMessage(entertainmentCategory, article);
+			
 
-			producer.sendMessage(test);
+			
 			Article article2 = Article.builder().url("superman")
 					.title("Superman")
 					.content("...").category(entertainmentCategory).build();
-			var test2 = new TestMessage(entertainmentCategory, article);
+			
 
 			articleRepository
 					.save(article2);
-			producer.sendMessage(test2);
+			
 
 			Article article3 = Article.builder().url("maxpetent winner winner chicken dinner")
 					.title("F1 race")
 					.content("...").category(sportCategory).build();
 			articleRepository
 					.save(article3);
-			var test3 = new TestMessage(entertainmentCategory, article);
-			producer.sendMessage(test3);
+			
+		
 			
 		} catch (Exception e) {
 			log.error("Cannot create seed data");

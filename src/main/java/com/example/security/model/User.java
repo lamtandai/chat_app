@@ -6,7 +6,9 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
+
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,6 +18,9 @@ import lombok.ToString;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import com.example.security.model.Authority.Authority;
+import com.example.security.model.Authority.Token;
+import com.example.security.model.Chatting.Channel;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.util.List;
@@ -27,6 +32,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
+@Table(name = "users")
 public class User implements UserDetails {
 
     @Id
@@ -65,10 +71,16 @@ public class User implements UserDetails {
     private boolean enabled;
 
     @Enumerated(EnumType.STRING)
-    private Role role;
+    private com.example.security.model.Authority.Role role;
 
     @OneToMany(mappedBy = "user", fetch = FetchType.EAGER)
     @JsonIgnore
     @ToString.Exclude
     private List<Token> tokens;
+
+    @OneToMany(mappedBy = "creatorId",   fetch = FetchType.LAZY)
+    @JsonIgnore
+    private List<Channel> channels;
+
+
 }

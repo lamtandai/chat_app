@@ -5,9 +5,9 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
+
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
+
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -43,7 +43,7 @@ public class LoginController {
     }
 
     @GetMapping("/homepage")
-    public String dashboard(@AuthenticationPrincipal UserDetails principal) {
+    public String dashboard(@AuthenticationPrincipal UserPrincipal principal) {
         if (principal == null) {
             log.info("principal is null");
             return "redirect:/login";
@@ -53,7 +53,7 @@ public class LoginController {
 
     @GetMapping("/user-info")
     @ResponseBody
-    public Map<String, Object> getUserInfo(@AuthenticationPrincipal UserDetails principal) {
+    public Map<String, Object> getUserInfo(@AuthenticationPrincipal UserPrincipal principal) {
         Map<String, Object> userInfo = new HashMap<>();
 
         if (principal == null) {

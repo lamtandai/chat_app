@@ -2,6 +2,8 @@ package com.example.security.handler;
 
 import com.example.security.dto.UserPrincipal;
 import com.example.security.model.User;
+import com.example.security.model.Authority.Token;
+import com.example.security.repository.TokenRepository;
 import com.example.security.repository.UserRepository;
 import com.example.security.service.JwtService;
 import jakarta.servlet.ServletException;
@@ -24,11 +26,12 @@ public class JwtLoginSuccessHandler extends SimpleUrlAuthenticationSuccessHandle
 
     private final JwtService jwtService;
     private final UserRepository userRepository;
+    private final TokenRepository tokenRepository;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request,
-                                        HttpServletResponse response,
-                                        Authentication authentication)
+            HttpServletResponse response,
+            Authentication authentication)
             throws IOException, ServletException {
 
         UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
@@ -45,6 +48,16 @@ public class JwtLoginSuccessHandler extends SimpleUrlAuthenticationSuccessHandle
         if (!reuseToken) {
             accessToken = jwtService.generateToken(user);
             refreshToken = jwtService.generateRefreshToken(user);
+            
+            Token refresh_token = Token
+                .builder()
+                .user(user)
+                .token(refreshToken)
+                .expired(false)
+                .revoked(false)
+                .build();
+            tokenRepository.save(refresh_token);
+
             log.info("🔑 Generated new JWT tokens for user {}", user.getUsername());
         } else {
             log.info("♻️ Reusing existing valid access token for {}", user.getUsername());
@@ -52,22 +65,21 @@ public class JwtLoginSuccessHandler extends SimpleUrlAuthenticationSuccessHandle
 
         // 🍪 Save cookies (even if reusing)
         setCookie(response, "access_token", accessToken, 24 * 3600);
-        setCookie(response, "refresh_token", refreshToken, 7 * 24 * 3600);
 
         // 🧭 Determine where to go next
-        
+
         // ⚙️ Internal forward — NOT external redirect
         if (authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
             response.sendRedirect("/api/v1/admin");
         } else {
-           response.sendRedirect("/homepage");
+            response.sendRedirect("/chat");
 
         }
     }
 
-
     private String getCookieValue(HttpServletRequest request, String name) {
-        if (request.getCookies() == null) return null;
+        if (request.getCookies() == null)
+            return null;
         return Arrays.stream(request.getCookies())
                 .filter(c -> name.equals(c.getName()))
                 .findFirst()
@@ -84,4 +96,3 @@ public class JwtLoginSuccessHandler extends SimpleUrlAuthenticationSuccessHandle
         response.addCookie(cookie);
     }
 }
-

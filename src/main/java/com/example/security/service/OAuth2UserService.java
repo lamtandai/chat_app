@@ -117,7 +117,7 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
                 .lastname(lastname)
                 .email(email)
                 .password(null) // OAuth2 users don't have passwords
-                .role(com.example.security.model.Role.USER)
+                .role(com.example.security.model.Authority.Role.USER)
                 .build();
 
         // Call the registration service (same as basic auth flow)

@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class MessageRequest {
-    private String content;
-    private String sender;
+public class ChannelSearchResponse {
+    private Long id;
+    private String name;
 }

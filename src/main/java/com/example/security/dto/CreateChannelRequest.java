@@ -1,5 +1,7 @@
 package com.example.security.dto;
 
+import java.util.List;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -9,10 +11,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class RegisterRequest {
-  private String firstname;
-  private String lastname;
-  private String email;
-  private String password;
-  private com.example.security.model.Authority.Role role;
+public class CreateChannelRequest {
+    private String name;
+    private String creatorId;
+    private List<String> memberIds;
 }

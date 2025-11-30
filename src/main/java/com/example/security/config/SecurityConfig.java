@@ -28,84 +28,87 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private static final String[] WHITE_LIST_URL = {
-            "/favicon.ico",
-            "/ws/**",
-            "/test/**",
-            "/api/v1/auth/**",
-            "/login",
-            "/login.html",
-            "/css/**",
-            "/js/**",
-            "/v2/api-docs",
-            "/v3/api-docs",
-            "/v3/api-docs/**",
-            "/swagger-resources",
-            "/swagger-resources/**",
-            "/configuration/ui",
-            "/configuration/security",
-            "/swagger-ui/**",
-            "/webjars/**",
-            "/swagger-ui.html"
-    };
+        private static final String[] WHITE_LIST_URL = {
+                        "/favicon.ico",
+                        "/ws/**",
+                        "/test/**",
+                        "/api/v1/auth/**",
+                        "/login",
+                        "/login.html",
+                        "/css/**",
+                        "/js/**",
+                        "/chat/**",
+                        "/v2/api-docs",
+                        "/v3/api-docs",
+                        "/v3/api-docs/**",
+                        "/swagger-resources",
+                        "/swagger-resources/**",
+                        "/configuration/ui",
+                        "/configuration/security",
+                        "/swagger-ui/**",
+                        "/webjars/**",
+                        "/swagger-ui.html"
+        };
 
-    private final OAuth2UserService oAuth2UserService;
-    private final JwtAuthenticationFilter jwtAuthFilter;
-    private final AuthenticationProvider authenticationProvider;
-    private final LogoutHandler logoutHandler;
-    private final JwtLoginSuccessHandler JwtLoginSuccessHandler;
-    private final CustomAuthorizationRequestResolver customAuthorizationRequestResolver;
+        private final OAuth2UserService oAuth2UserService;
+        private final JwtAuthenticationFilter jwtAuthFilter;
+        private final AuthenticationProvider authenticationProvider;
+        private final LogoutHandler logoutHandler;
+        private final JwtLoginSuccessHandler JwtLoginSuccessHandler;
+        private final CustomAuthorizationRequestResolver customAuthorizationRequestResolver;
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        log.info("🔧 Configuring Unified Security Filter Chain (OAuth2 + JWT)");
+        @Bean
+        public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+                log.info("🔧 Configuring Unified Security Filter Chain (OAuth2 + JWT)");
 
-        http
-                .csrf(AbstractHttpConfigurer::disable)
-                // Authorization rules
-                .authorizeHttpRequests(req -> req
-                        .requestMatchers(WHITE_LIST_URL).permitAll()
-                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/v1/users/**").hasRole("USER")
-                        .anyRequest().authenticated())
+                http
+                                .csrf(AbstractHttpConfigurer::disable)
+                                // Authorization rules
+                                .authorizeHttpRequests(req -> req
+                                                .requestMatchers(WHITE_LIST_URL).permitAll()
+                                                .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+                                                .requestMatchers("/api/v1/users/**").hasRole("USER")
+                                                .anyRequest().authenticated())
 
-                // Stateless session for JWT
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .formLogin(form -> form
-                        .loginPage("/login")
-                        .successHandler(JwtLoginSuccessHandler)
-                        .failureUrl("/login?error=true"))
-                // OAuth2 Login configuration
-                .oauth2Login(oauth2 -> oauth2
-                        .loginPage("/login")
-                        .authorizationEndpoint(auth -> auth
-                                .authorizationRequestResolver(customAuthorizationRequestResolver))
-                        .userInfoEndpoint(infoEndpoint -> infoEndpoint
-                                .userService(oAuth2UserService))
-                        // SUCCESS: After OAuth2 login, generate JWT token
-                        .successHandler(JwtLoginSuccessHandler)
-                        .failureUrl("/login?error=true"))
+                                // Stateless session for JWT
+                                .sessionManagement(session -> session
+                                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                                .formLogin(form -> form
+                                                .loginPage("/login")
+                                                .successHandler(JwtLoginSuccessHandler)
+                                                .failureUrl("/login?error=true"))
+                                // OAuth2 Login configuration
+                                .oauth2Login(oauth2 -> oauth2
+                                                .loginPage("/login")
+                                                .authorizationEndpoint(auth -> auth
+                                                                .authorizationRequestResolver(
+                                                                                customAuthorizationRequestResolver))
+                                                .userInfoEndpoint(infoEndpoint -> infoEndpoint
+                                                                .userService(oAuth2UserService))
+                                                .successHandler(JwtLoginSuccessHandler)
+                                                // SUCCESS: After OAuth2 login, generate JWT token
 
-                // Form login (optional - if you want username/password login page)
-                // For API-based login, use /api/v1/auth/authenticate endpoint instead
-                
-                // JWT Authentication filter
-                .authenticationProvider(authenticationProvider)
-                
-                // Logout configuration
-                .logout(logout -> logout
-                        .logoutUrl("/logout")
-                        .addLogoutHandler(logoutHandler)
-                        .logoutSuccessHandler((request, response, authentication) -> {
-                            SecurityContextHolder.clearContext();
-                            response.sendRedirect("/login");
-                        })
-                        .deleteCookies("access_token", "refresh_token", "JSESSIONID"));
+                                                .failureUrl("/login?error=true"))
 
-        http
-            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                                // Form login (optional - if you want username/password login page)
+                                // For API-based login, use /api/v1/auth/authenticate endpoint instead
 
-        return http.build();
-    }
+                                // JWT Authentication filter
+                                .authenticationProvider(authenticationProvider)
+
+                                // Logout configuration
+                                .logout(logout -> logout
+                                                .logoutUrl("/logout")
+                                                .addLogoutHandler(logoutHandler)
+                                                .logoutSuccessHandler((request, response, authentication) -> {
+                                                        SecurityContextHolder.clearContext();
+                                                        response.sendRedirect("/login");
+                                                })
+                                                .deleteCookies("access_token", "refresh_token", "JSESSIONID"));
+
+                http
+                                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+
+                return http.build();
+        }
 }
